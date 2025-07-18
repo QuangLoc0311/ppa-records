@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { PlayersPage } from './pages/PlayersPage';
 import { GeneratorPage } from './pages/GeneratorPage';
-import { RecordingPage } from './pages/RecordingPage';
 import { StatsPage } from './pages/StatsPage';
 
-type Tab = 'players' | 'generator' | 'recording' | 'stats';
+type Tab = 'players' | 'generator' | 'stats';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('players');
@@ -15,8 +14,6 @@ function App() {
         return <PlayersPage activeTab={activeTab} setActiveTab={setActiveTab} />;
       case 'generator':
         return <GeneratorPage activeTab={activeTab} setActiveTab={setActiveTab} />;
-      case 'recording':
-        return <RecordingPage activeTab={activeTab} setActiveTab={setActiveTab} />;
       case 'stats':
         return <StatsPage activeTab={activeTab} setActiveTab={setActiveTab} />;
       default:

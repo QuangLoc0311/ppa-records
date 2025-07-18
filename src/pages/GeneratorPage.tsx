@@ -1,7 +1,7 @@
 import { MatchGenerator } from '../components/MatchGenerator';
 import { Layout } from '../components/Layout';
 
-type Tab = 'players' | 'generator' | 'recording' | 'stats';
+type Tab = 'players' | 'generator' | 'stats';
 
 interface GeneratorPageProps {
   activeTab: Tab;

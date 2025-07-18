@@ -1,180 +1,227 @@
 # Pickleball Match Tracker
 
-An AI-powered pickleball match tracking system with intelligent team balancing and ELO-based scoring.
+A modern, mobile-first web application for managing pickleball matches with AI-powered matchmaking. Built with React, TypeScript, Tailwind CSS, and Supabase.
 
-## Features
+## 🚀 Features
 
-### 👥 Player Management
-- Add and delete players
-- Each player has: name, age, avatar URL, score, and gender
-- Visual player cards with avatars and stats
+- **Player Management**: Add, edit, and manage player profiles with skill scores
+- **AI Match Generator**: Advanced algorithm considering fatigue, gender balance, and session planning
+- **Match Recording**: Record match results with automatic score recalculation
+- **Statistics**: Track player performance and match history
+- **Mobile-First Design**: Optimized for mobile devices with responsive layout
 
-### 🧠 AI Match Generator
-- Intelligent team balancing based on player scores
-- Avoids repeated team pairings from recent matches
-- Creates balanced 2v2 matches with score difference within 200 points
+## 📱 Mobile-First Design
 
-### 📝 Match Recording
-- Input final scores after each match
-- Real-time score validation
-- Automatic winner determination
+This application is built with mobile-first principles using Tailwind CSS:
 
-### 📈 Score Recalculation
-- ELO-like rating system for fair matchmaking
-- Automatic score updates after each match
-- Bonus points for close matches
-- Improves future team balancing
+### Responsive Breakpoints
+- **Mobile**: Default (320px+)
+- **Small**: 640px+ (`sm:`)
+- **Medium**: 768px+ (`md:`)
+- **Large**: 1024px+ (`lg:`)
+- **Extra Large**: 1280px+ (`xl:`)
 
-## Tech Stack
+### Mobile Optimizations
+- Touch-friendly buttons (minimum 44px height)
+- Responsive navigation with hamburger menu
+- Optimized form inputs (16px font size to prevent zoom on iOS)
+- Mobile-friendly spacing and typography
+- Safe area support for notched devices
 
-- **Frontend**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS with custom design system
-- **Database**: Supabase (PostgreSQL)
+### Key Mobile Features
+- **Sticky Header**: Navigation stays accessible while scrolling
+- **Collapsible Menu**: Mobile navigation with smooth animations
+- **Responsive Cards**: Adapt to different screen sizes
+- **Touch Targets**: All interactive elements meet accessibility guidelines
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS 3.x (Mobile-first)
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **Build Tool**: Vite
 - **Icons**: Lucide React
-- **UI Components**: Custom component library
+- **State Management**: React Hooks
 
-## Setup
+## 📦 Installation
 
-### 1. Clone the repository
-```bash
-git clone <repository-url>
-cd ppa-records
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ppa-records
+   ```
 
-### 2. Install dependencies
-```bash
-npm install
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### 3. Set up Supabase
+3. **Set up environment variables**
+   Create a `.env.local` file:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Create the following tables in your Supabase database:
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-#### Players Table
+## 🗄️ Database Schema
+
+### Players Table
 ```sql
 CREATE TABLE players (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   avatar_url TEXT,
   gender TEXT CHECK (gender IN ('male', 'female')),
-  score FLOAT DEFAULT 1000
+  score INTEGER DEFAULT 1000,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-#### Matches Table
+### Matches Table
 ```sql
-create table matches (
-  id uuid primary key default uuid_generate_v4(),
-  created_at timestamp default now(),
-  team1_score int,
-  team2_score int
+CREATE TABLE matches (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  team1_score INTEGER,
+  team2_score INTEGER
 );
 ```
 
-#### Match Players (many to many)
+### Match Players Table
 ```sql
 CREATE TABLE match_players (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   match_id UUID REFERENCES matches(id) ON DELETE CASCADE,
   player_id UUID REFERENCES players(id) ON DELETE CASCADE,
   team INTEGER CHECK (team IN (1, 2)),
-  CONSTRAINT match_player_pk PRIMARY KEY (match_id, player_id)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-### 4. Environment Variables
+## 🎯 Usage
 
-Create a `.env` file in the root directory:
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-### 5. Start the development server
-```bash
-npm run dev
-```
-
-## Usage
-
-### Adding Players
+### Player Management
 1. Navigate to the "Players" tab
-2. Click "Add Player"
-3. Fill in the player details (name, age, gender, optional avatar URL)
-4. Click "Add Player" to save
+2. Click "Add Player" to create new player profiles
+3. Set initial skill scores (default: 1000)
+4. Edit or delete players as needed
 
-### Generating Matches
-1. Navigate to the "Match Generator" tab
-2. Click "Generate Match" to create balanced teams
-3. Review the generated teams and their total scores
-4. Click "Start Match" to begin the match
+### Match Generation
+1. Go to the "Match Generator" tab
+2. Configure session parameters:
+   - Session duration (minutes)
+   - Match duration (minutes)
+3. Click "Generate Session" to create multiple matches
+4. Review the generated match schedule
 
-### Recording Match Results
-1. Navigate to the "Match Recording" tab
-2. Select an active match from the list
-3. Enter the final scores for both teams
-4. Click "Save Result" to record the outcome and update player scores
+### Match Recording
+1. Visit the "Match Recording" tab
+2. Generate a new match or select from existing ones
+3. Record final scores for both teams
+4. Save results to update player scores automatically
 
-## Architecture
+## 🎨 Styling Guidelines
 
-### Services Layer
-The application uses a services layer to separate business logic from UI components:
+### Mobile-First CSS Classes
+```css
+/* Responsive spacing */
+.space-mobile { @apply space-y-4 sm:space-y-6; }
+.gap-mobile { @apply gap-3 sm:gap-4; }
 
-- **playerService**: Handles all player-related database operations
-- **matchService**: Manages match creation, updates, and queries
-- **scoreService**: Contains ELO-like scoring algorithms and team balancing logic
+/* Responsive text */
+.text-responsive { @apply text-sm sm:text-base; }
+.text-responsive-lg { @apply text-base sm:text-lg; }
 
-This architecture provides:
-- Better separation of concerns
-- Reusable business logic
-- Easier testing and maintenance
-- Cleaner component code
+/* Mobile-friendly grid */
+.grid-mobile { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
+```
 
-## Algorithm Details
+### Component Structure
+- Use `flex-col sm:flex-row` for responsive layouts
+- Apply `w-full sm:w-auto` for responsive buttons
+- Use `text-sm sm:text-base` for responsive typography
+- Implement `p-4 sm:p-6` for responsive padding
 
-### Team Balancing
-- Players are sorted by score (highest to lowest)
-- Teams are created by alternating players to maintain balance
-- Score difference is kept within 200 points when possible
-- Recent team pairings are avoided to ensure variety
+## 🔧 Development
 
-### ELO Rating System
-- K-factor of 32 for rating changes
-- Expected win probability calculated based on team score differences
-- Actual result: 1 for win, 0 for loss
-- Close matches (score difference ≤ 2) receive a 5-point bonus
-- Minimum score is capped at 100
-
-## Project Structure
-
+### Project Structure
 ```
 src/
-├── components/
-│   ├── ui/                 # Reusable UI components
+├── components/          # Reusable UI components
+│   ├── ui/             # Base UI components
+│   ├── Layout.tsx      # Main layout with navigation
 │   ├── PlayerManagement.tsx
 │   ├── MatchGenerator.tsx
-│   └── MatchRecording.tsx
-├── lib/
-│   ├── supabase.ts        # Supabase client
-│   └── utils.ts           # Utility functions
-├── services/
-│   ├── playerService.ts   # Player-related API operations
-│   ├── matchService.ts    # Match-related API operations
-│   ├── scoreService.ts    # Score calculation logic
-│   └── index.ts           # Service exports
-├── types/
-│   └── index.ts           # TypeScript type definitions
-└── App.tsx                # Main application component
+│   ├── MatchRecording.tsx
+│   └── MatchCard.tsx   # Reusable match display
+├── pages/              # Page components
+├── services/           # API service layer
+├── utils/              # Business logic utilities
+├── types/              # TypeScript type definitions
+└── lib/                # Third-party library configs
 ```
 
-## Contributing
+### Adding New Components
+1. Create component in `src/components/`
+2. Use mobile-first Tailwind classes
+3. Test on mobile devices
+4. Add responsive breakpoints as needed
+
+### Mobile Testing
+- Test on actual mobile devices
+- Use browser dev tools mobile emulation
+- Verify touch interactions work properly
+- Check performance on slower devices
+
+## 🚀 Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Deploy to Vercel
+1. Connect your GitHub repository
+2. Set environment variables
+3. Deploy automatically on push
+
+### Deploy to Netlify
+1. Connect your repository
+2. Set build command: `npm run build`
+3. Set publish directory: `dist`
+
+## 📱 Mobile Performance Tips
+
+1. **Optimize Images**: Use WebP format and proper sizing
+2. **Minimize Bundle Size**: Code splitting and lazy loading
+3. **Touch Interactions**: Ensure 44px minimum touch targets
+4. **Loading States**: Provide feedback for async operations
+5. **Offline Support**: Consider PWA features for better UX
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
+3. Follow mobile-first design principles
+4. Test on mobile devices
 5. Submit a pull request
 
-## License
+## 📄 License
 
 MIT License - see LICENSE file for details
+
+## 🆘 Support
+
+For issues and questions:
+1. Check the documentation
+2. Search existing issues
+3. Create a new issue with details
+
+---
+
+Built with ❤️ for the pickleball community

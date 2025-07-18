@@ -66,46 +66,46 @@ export function MatchCard({
   };
 
   const renderCompactView = () => (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <div className="text-sm">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+        <div className="text-sm leading-tight">
           <span className="font-semibold text-blue-600">
             {match.team1.player1.name} & {match.team1.player2.name}
           </span>
-          <span className="mx-2">vs</span>
+          <span className="mx-2 text-gray-500">vs</span>
           <span className="font-semibold text-red-600">
             {match.team2.player1.name} & {match.team2.player2.name}
           </span>
         </div>
       </div>
-      <div className="text-sm text-gray-600">
+      <div className="text-xs sm:text-sm text-gray-600">
         {new Date(match.createdAt).toLocaleDateString()}
       </div>
     </div>
   );
 
   const renderDetailedView = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Team 1 */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-bold text-blue-600">Team 1</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-blue-600">Team 1</h3>
             {showScores && (
-              <p className="text-sm text-gray-600">Total Score: {match.team1.totalScore}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Total Score: {match.team1.totalScore}</p>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {[match.team1.player1, match.team1.player2].map((player) => (
-              <div key={player.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-blue-600 font-semibold">
+              <div key={player.id} className="flex items-center space-x-3 p-2 sm:p-3 bg-white rounded-lg border">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 font-semibold text-sm sm:text-base">
                     {player.name.charAt(0)}
                   </span>
                 </div>
-                <div>
-                  <p className="font-semibold">{player.name}</p>
-                  <p className="text-sm text-gray-600">Score: {player.score}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm sm:text-base truncate">{player.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score}</p>
                 </div>
               </div>
             ))}
@@ -113,24 +113,24 @@ export function MatchCard({
         </div>
 
         {/* Team 2 */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-xl font-bold text-red-600">Team 2</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-red-600">Team 2</h3>
             {showScores && (
-              <p className="text-sm text-gray-600">Total Score: {match.team2.totalScore}</p>
+              <p className="text-xs sm:text-sm text-gray-600">Total Score: {match.team2.totalScore}</p>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {[match.team2.player1, match.team2.player2].map((player) => (
-              <div key={player.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="text-red-600 font-semibold">
+              <div key={player.id} className="flex items-center space-x-3 p-2 sm:p-3 bg-white rounded-lg border">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-red-600 font-semibold text-sm sm:text-base">
                     {player.name.charAt(0)}
                   </span>
                 </div>
-                <div>
-                  <p className="font-semibold">{player.name}</p>
-                  <p className="text-sm text-gray-600">Score: {player.score}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm sm:text-base truncate">{player.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score}</p>
                 </div>
               </div>
             ))}
@@ -140,18 +140,18 @@ export function MatchCard({
 
       {showScores && match.team1Score === 0 && match.team2Score === 0 && (
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4">
             Score difference: {Math.abs(match.team1.totalScore - match.team2.totalScore)} points
           </p>
         </div>
       )}
 
       {showScores && (match.team1Score > 0 || match.team2Score > 0) && (
-        <div className="border-t pt-6">
-          <h4 className="text-lg font-semibold mb-4 text-center">Final Score</h4>
-          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+        <div className="border-t pt-4 sm:pt-6">
+          <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-center">Final Score</h4>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-xs sm:max-w-md mx-auto">
             <div>
-              <label className="block text-sm font-medium mb-2 text-blue-600">Team 1 Score</label>
+              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-blue-600">Team 1 Score</label>
               <input
                 type="number"
                 value={team1Score}
@@ -159,11 +159,11 @@ export function MatchCard({
                 placeholder={match.team1Score.toString()}
                 min="0"
                 max="21"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-red-600">Team 2 Score</label>
+              <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-red-600">Team 2 Score</label>
               <input
                 type="number"
                 value={team2Score}
@@ -171,7 +171,7 @@ export function MatchCard({
                 placeholder={match.team2Score.toString()}
                 min="0"
                 max="21"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
           </div>
@@ -179,14 +179,14 @@ export function MatchCard({
       )}
 
       {showActions && (
-        <div className="flex gap-2 justify-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 justify-center">
           {onStartMatch && match.team1Score === 0 && match.team2Score === 0 && (
-            <Button onClick={() => onStartMatch(match)} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={() => onStartMatch(match)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
               Start Match
             </Button>
           )}
           {onGenerateNew && match.team1Score === 0 && match.team2Score === 0 && (
-            <Button variant="outline" onClick={onGenerateNew}>
+            <Button variant="outline" onClick={onGenerateNew} className="w-full sm:w-auto">
               Generate New Match
             </Button>
           )}
@@ -194,7 +194,7 @@ export function MatchCard({
             <Button 
               onClick={handleSaveResult}
               disabled={isSubmitting || !team1Score || !team2Score}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
             >
               {isSubmitting ? 'Saving...' : 'Save Result'}
             </Button>
@@ -209,7 +209,7 @@ export function MatchCard({
       className={getCardStyles()}
       onClick={variant === 'selectable' && onSelect ? () => onSelect(match) : undefined}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {variant === 'compact' ? renderCompactView() : renderDetailedView()}
       </CardContent>
     </Card>

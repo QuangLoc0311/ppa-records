@@ -1,7 +1,7 @@
 import { PlayerManagement } from '../components/PlayerManagement';
 import { Layout } from '../components/Layout';
 
-type Tab = 'players' | 'generator' | 'recording' | 'stats';
+type Tab = 'players' | 'generator' | 'stats';
 
 interface PlayersPageProps {
   activeTab: Tab;
