@@ -24,7 +24,7 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,12 +109,12 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 w-full">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-8 sm:mt-16">
+      <footer className="bg-white border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="text-center text-xs sm:text-sm text-gray-500">
             <p>Pickleball Match Tracker - AI-Powered Matchmaking System</p>

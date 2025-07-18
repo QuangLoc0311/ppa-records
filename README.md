@@ -77,7 +77,7 @@ CREATE TABLE players (
   name TEXT NOT NULL,
   avatar_url TEXT,
   gender TEXT CHECK (gender IN ('male', 'female')),
-  score INTEGER DEFAULT 1000,
+  score DECIMAL(3,1) DEFAULT 5.0 CHECK (score >= 0.0 AND score <= 10.0),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
@@ -103,12 +103,54 @@ CREATE TABLE match_players (
 );
 ```
 
+## 📁 Supabase Storage Setup
+
+### 1. Create Storage Bucket
+In your Supabase dashboard, go to Storage and create a new bucket:
+- **Bucket name**: `images`
+- **Public bucket**: ✅ (checked)
+- **File size limit**: 5MB
+- **Allowed MIME types**: `image/jpeg`, `image/png`, `image/webp`
+
+### 2. Storage Policies
+Add the following RLS policies to your `images` bucket:
+
+**Allow public read access:**
+```sql
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'images');
+```
+
+**Allow public uploads (no authentication required):**
+```sql
+CREATE POLICY "Public Upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'images');
+```
+
+**Allow public updates:**
+```sql
+CREATE POLICY "Public Update" ON storage.objects FOR UPDATE USING (bucket_id = 'images');
+```
+
+**Allow public deletes:**
+```sql
+CREATE POLICY "Public Delete" ON storage.objects FOR DELETE USING (bucket_id = 'images');
+```
+
+**Note**: These policies allow public access to the storage bucket. If you plan to add authentication later, you should update these policies to be more restrictive.
+
+### 3. Folder Structure
+The app will automatically create the following folder structure:
+```
+images/
+├── avatars/          # Player profile pictures
+└── ...
+```
+
 ## 🎯 Usage
 
 ### Player Management
 1. Navigate to the "Players" tab
 2. Click "Add Player" to create new player profiles
-3. Set initial skill scores (default: 1000)
+3. Set initial skill scores (default: 5.0, range: 0.0-10.0)
 4. Edit or delete players as needed
 
 ### Match Generation

@@ -105,7 +105,7 @@ export function MatchCard({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm sm:text-base truncate">{player.name}</p>
-                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score.toFixed(1)}</p>
                 </div>
               </div>
             ))}
@@ -130,7 +130,7 @@ export function MatchCard({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm sm:text-base truncate">{player.name}</p>
-                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Score: {player.score.toFixed(1)}</p>
                 </div>
               </div>
             ))}

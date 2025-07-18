@@ -243,17 +243,15 @@ export function MatchGenerator() {
                         <span className={`text-sm font-bold ${
                           isSelected ? 'text-white' : 'text-blue-600'
                         }`}>
-                          {player.score}
+                          {player.score.toFixed(1)}
                         </span>
                       </div>
                       
                       {/* Skill Level Bar */}
                       <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            isSelected ? 'bg-white' : 'bg-gradient-to-r from-blue-400 to-blue-600'
-                          }`}
-                          style={{ width: `${Math.min((player.score / 2000) * 100, 100)}%` }}
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min((player.score / 10) * 100, 100)}%` }}
                         ></div>
                       </div>
                     </div>

@@ -5,6 +5,7 @@ export interface CreatePlayerData {
   name: string;
   avatar_url?: string;
   gender: Gender;
+  score: number;
 }
 
 export const playerService = {
@@ -49,7 +50,7 @@ export const playerService = {
           {
             name: playerData.name,
             avatar_url: playerData.avatar_url || 'https://via.placeholder.com/150',
-            score: 1000, // Default starting score
+            score: playerData.score, 
             gender: playerData.gender,
           }
         ])
@@ -91,8 +92,8 @@ export const playerService = {
 
       if (fetchError) throw fetchError;
 
-      // Calculate new score with minimum of 100
-      const newScore = Math.max((currentPlayer.score || 1000) + scoreChange, 100);
+      // Calculate new score with minimum of 0.0 and maximum of 10.0
+      const newScore = Math.max(Math.min((currentPlayer.score || 5.0) + scoreChange, 10.0), 0.0);
 
       const { error } = await supabase
         .from('players')

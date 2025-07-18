@@ -262,7 +262,7 @@ export function MatchRecording() {
                         <span className={`text-sm font-bold ${
                           isSelected ? 'text-white' : 'text-green-600'
                         }`}>
-                          {player.score}
+                          {player.score.toFixed(1)}
                         </span>
                       </div>
                       
@@ -272,7 +272,7 @@ export function MatchRecording() {
                           className={`h-2 rounded-full transition-all duration-300 ${
                             isSelected ? 'bg-white' : 'bg-gradient-to-r from-green-400 to-green-600'
                           }`}
-                          style={{ width: `${Math.min((player.score / 2000) * 100, 100)}%` }}
+                          style={{ width: `${Math.min((player.score / 10) * 100, 100)}%` }}
                         ></div>
                       </div>
                     </div>

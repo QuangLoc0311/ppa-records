@@ -5,7 +5,7 @@ export interface Player {
   name: string;
   avatar_url?: string;
   gender: Gender;
-  score: number; // float in database
+  score: number; // float 0-10 with one decimal place
 }
 
 export interface MatchPlayer {

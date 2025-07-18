@@ -153,7 +153,7 @@ export function StatsPage({ activeTab, setActiveTab }: StatsPageProps) {
                       <p className="text-sm text-gray-600 capitalize">{player.gender}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-blue-600">{player.score}</p>
+                      <p className="font-bold text-blue-600">{player.score.toFixed(1)}</p>
                       <p className="text-xs text-gray-500">points</p>
                     </div>
                   </div>
