@@ -1,5 +1,6 @@
-import { User, CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Square } from 'lucide-react';
 import type { Player } from '../types';
+import { UserAvatar } from './UserAvatar';
 
 interface PlayerCardProps {
   player: Player;
@@ -55,21 +56,11 @@ export function PlayerCard({
 
       {/* Player Avatar */}
       <div className="flex items-center space-x-3 mb-3">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ${
-          variant === 'selection' && isSelected
-            ? 'bg-white text-blue-600' 
-            : 'bg-gradient-to-br from-blue-400 to-blue-600'
-        }`}>
-          {player.avatar_url ? (
-            <img
-              src={player.avatar_url}
-              alt={player.name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <User className="w-6 h-6" />
-          )}
-        </div>
+        <UserAvatar 
+          user={player} 
+          size="lg"
+          className={variant === 'selection' && isSelected ? 'bg-white text-blue-600' : ''}
+        />
         <div className="flex-1 min-w-0">
           <h4 className={`font-bold text-sm sm:text-base truncate ${
             variant === 'selection' && isSelected ? 'text-white' : 'text-gray-800'

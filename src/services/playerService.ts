@@ -49,7 +49,7 @@ export const playerService = {
         .insert([
           {
             name: playerData.name,
-            avatar_url: playerData.avatar_url || 'https://via.placeholder.com/150',
+            avatar_url: playerData.avatar_url || '',
             score: playerData.score, 
             gender: playerData.gender,
           }

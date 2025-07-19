@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Edit, Trash2, Save, X, Image, XCircle, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, XCircle, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import type { Player, Gender } from '../types';
 import { playerService, storageService, type CreatePlayerData } from '../services';
+import UserAvatar from './UserAvatar';
 
 export function PlayerManagement() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -380,17 +381,8 @@ export function PlayerManagement() {
                   <div className="flex items-center space-x-4 flex-1 min-w-0">
                     {/* Player Avatar */}
                     <div className="relative">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-lg">
-                        {player.avatar_url ? (
-                          <img
-                            src={player.avatar_url}
-                            alt={player.name}
-                            className="w-16 h-16 rounded-full object-cover"
-                          />
-                        ) : (
-                          <Image className="w-8 h-8" />
-                        )}
-                      </div>
+                      <UserAvatar user={player} size="lg" />
+                      
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>

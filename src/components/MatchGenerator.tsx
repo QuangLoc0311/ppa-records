@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Users, Zap, Play, Save } from 'lucide-react';
-import { Button } from './ui/button';
+import { Users } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
-import { MatchCard } from './MatchCard';
-import { PlayerCard } from './PlayerCard';
+import { PlayerSelection } from './PlayerSelection';
+import { SessionConfiguration } from './SessionConfiguration';
+import { SessionPreview } from './SessionPreview';
+import { SessionProgress } from './SessionProgress';
 import type { Player, UIMatch } from '../types';
-import { playerService, matchService, scoreService } from '../services';
+import { playerService, matchService, scoreService, sessionService } from '../services';
 import { generateSession, convertSessionMatchToUIMatch } from '../utils/sessionGenerator';
 
 export function MatchGenerator() {
@@ -13,9 +14,11 @@ export function MatchGenerator() {
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set());
   const [sessionMatches, setSessionMatches] = useState<UIMatch[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
   const [sessionMinutes, setSessionMinutes] = useState(120);
   const [matchDuration, setMatchDuration] = useState(15);
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number | null>(null);
+  const [showGeneratedMatches, setShowGeneratedMatches] = useState(false);
 
   useEffect(() => {
     fetchPlayers();
@@ -64,22 +67,62 @@ export function MatchGenerator() {
       const matches = generateSession(selectedPlayersList, sessionMinutes, matchDuration);
       setSessionMatches(matches.map(m => convertSessionMatchToUIMatch(m, `session`)));
       setIsGenerating(false);
-      setCurrentMatchIndex(0); // Start with the first match
+      setShowGeneratedMatches(true);
+      setCurrentMatchIndex(null);
     }, 500);
+  };
+
+  const handleActivateSession = async () => {
+    if (sessionMatches.length === 0) return;
+
+    setIsActivating(true);
+    try {
+      // Create session with matches
+      const session = await sessionService.createSession({
+        name: `Session ${new Date().toLocaleDateString()}`,
+        sessionDurationMinutes: sessionMinutes,
+        matchDurationMinutes: matchDuration,
+        matches: sessionMatches.map(match => ({
+          matchNumber: match.matchNumber,
+          team1: match.team1,
+          team2: match.team2,
+          team1Score: 0,
+          team2Score: 0,
+          winner: null,
+          status: 'scheduled' as const,
+        })),
+      });
+
+      // Update session status to in_progress
+      await sessionService.updateSessionStatus(session.id, 'in_progress');
+
+      // Update local state to show matches are now active
+      const updatedMatches = sessionMatches.map(match => ({
+        ...match,
+        sessionId: session.id,
+        status: 'scheduled' as const,
+      }));
+      setSessionMatches(updatedMatches);
+      setCurrentMatchIndex(0);
+
+      alert('Session activated successfully! You can now start playing matches.');
+    } catch (error) {
+      console.error('Error activating session:', error);
+      alert('Failed to activate session. Please try again.');
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  const handleRegenerateSession = () => {
+    setShowGeneratedMatches(false);
+    setSessionMatches([]);
+    setCurrentMatchIndex(null);
+    handleGenerateSession();
   };
 
   const handleSaveMatchResult = async (match: UIMatch, team1Score: number, team2Score: number) => {
     try {
-      // Create match with players
-      await matchService.createMatch({
-        team1Player1Id: match.team1.player1.id,
-        team1Player2Id: match.team1.player2.id,
-        team2Player1Id: match.team2.player1.id,
-        team2Player2Id: match.team2.player2.id,
-        sessionId: match.sessionId,
-        matchNumber: match.matchNumber,
-      });
-
       // Update match result
       await matchService.updateMatchResult({
         matchId: match.id,
@@ -100,6 +143,7 @@ export function MatchGenerator() {
           team1Score,
           team2Score,
           winner,
+          status: 'completed' as const,
         };
         setSessionMatches(updatedMatches);
       }
@@ -109,6 +153,12 @@ export function MatchGenerator() {
         setCurrentMatchIndex(currentMatchIndex + 1);
       } else {
         setCurrentMatchIndex(null);
+        // Update session status to completed if all matches are done
+        const completedMatches = updatedMatches.filter(m => m.winner);
+        if (completedMatches.length === sessionMatches.length) {
+          // Session is complete
+          alert('Session completed! All matches have been played.');
+        }
       }
 
       // Refresh players to get updated scores
@@ -118,7 +168,24 @@ export function MatchGenerator() {
     }
   };
 
+  const getParticipantSummary = () => {
+    const selectedPlayersList = getSelectedPlayersList();
+    const participantStats = selectedPlayersList.map(player => {
+      const matchesPlayed = sessionMatches.filter(match => 
+        match.team1.player1.id === player.id ||
+        match.team1.player2.id === player.id ||
+        match.team2.player1.id === player.id ||
+        match.team2.player2.id === player.id
+      ).length;
+      
+      return { player, matchesPlayed };
+    });
+
+    return participantStats.sort((a, b) => b.matchesPlayed - a.matchesPlayed);
+  };
+
   const selectedPlayersList = getSelectedPlayersList();
+  const participantSummary = getParticipantSummary();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -128,107 +195,27 @@ export function MatchGenerator() {
           <h2 className="text-2xl sm:text-3xl font-bold">Session Planner</h2>
           <p className="text-gray-600 mt-1">Plan and play a complete session with AI-powered matchmaking</p>
         </div>
-        <Button 
-          onClick={handleGenerateSession} 
-          disabled={isGenerating || selectedPlayersList.length < 4}
-          className="bg-gradient-to-r cursor-pointer from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <Zap className="w-4 h-4 mr-2" />
-          {isGenerating ? 'Generating...' : 'Generate Session'}
-        </Button>
       </div>
 
       {/* Player Selection */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Select Players</h3>
-              <p className="text-sm text-gray-600">Choose which players will participate in this session</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-100 px-3 py-1 rounded-full">
-                <span className="text-sm font-semibold text-blue-700">
-                  {selectedPlayersList.length} of {players.length} selected
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSelectAll}
-                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-              >
-                {selectedPlayers.size === players.length ? 'Deselect All' : 'Select All'}
-              </Button>
-            </div>
-          </div>
+      <PlayerSelection
+        players={players}
+        selectedPlayers={selectedPlayers}
+        onPlayerToggle={handlePlayerToggle}
+        onSelectAll={handleSelectAll}
+      />
 
-          {players.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 text-lg">No players available</p>
-              <p className="text-gray-400 text-sm">Add players first to start generating matches</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {players.map((player) => {
-                const isSelected = selectedPlayers.has(player.id);
-                return (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    isSelected={isSelected}
-                    onClick={handlePlayerToggle}
-                    variant="selection"
-                    showScore={true}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Session Controls */}
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-purple-50">
-        <CardContent className="p-4 sm:p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Session Configuration</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Session Duration</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={30}
-                  max={300}
-                  value={sessionMinutes}
-                  onChange={e => setSessionMinutes(Number(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
-                />
-                <span className="absolute right-3 top-3 text-gray-400 text-sm">min</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700">Match Duration</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={5}
-                  max={60}
-                  value={matchDuration}
-                  onChange={e => setMatchDuration(Number(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
-                />
-                <span className="absolute right-3 top-3 text-gray-400 text-sm">min</span>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 text-center text-white">
-              <p className="text-sm font-medium opacity-90">Total Matches</p>
-              <p className="text-2xl font-bold">{Math.floor(sessionMinutes / matchDuration)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Session Configuration */}
+      <SessionConfiguration
+        sessionMinutes={sessionMinutes}
+        matchDuration={matchDuration}
+        onSessionMinutesChange={setSessionMinutes}
+        onMatchDurationChange={setMatchDuration}
+        onGenerateSession={handleGenerateSession}
+        isGenerating={isGenerating}
+        showGenerateButton={!showGeneratedMatches}
+        disabled={selectedPlayersList.length < 4}
+      />
 
       {/* Warning for insufficient players */}
       {selectedPlayersList.length < 4 && (
@@ -250,43 +237,23 @@ export function MatchGenerator() {
         </Card>
       )}
 
-      {/* Session Progress */}
-      {sessionMatches.length > 0 && (
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Session Progress</h3>
-              <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                {sessionMatches.filter(m => m.winner).length} of {sessionMatches.length} completed
-              </span>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${(sessionMatches.filter(m => m.winner).length / sessionMatches.length) * 100}%` }}
-              ></div>
-            </div>
+      {/* Generated Session Preview */}
+      {showGeneratedMatches && sessionMatches.length > 0 && (
+        <SessionPreview
+          sessionMatches={sessionMatches}
+          participantSummary={participantSummary}
+          onActivateSession={handleActivateSession}
+          onRegenerateSession={handleRegenerateSession}
+          isActivating={isActivating}
+        />
+      )}
 
-            <div className="space-y-4">
-              {sessionMatches.map((match) => {
-                
-                return (
-                  <div key={match.id} className="relative">
-                      <MatchCard 
-                        match={match} 
-                        variant="compact" 
-                        showActions={true}
-                        showScores={true}
-                        className={''}
-                      />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Active Session Progress */}
+      {sessionMatches.length > 0 && currentMatchIndex !== null && (
+        <SessionProgress
+          sessionMatches={sessionMatches}
+          onSaveMatchResult={handleSaveMatchResult}
+        />
       )}
     </div>
   );
