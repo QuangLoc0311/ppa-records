@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import type { UIMatch } from '../types';
+import UserAvatar from './UserAvatar';
 
 interface MatchCardProps {
   match: UIMatch;
@@ -82,27 +83,39 @@ export function MatchCard({
         <div className="block sm:hidden">
           <div className="flex items-center justify-between space-x-2">
             {/* Team 1 Players - Mobile */}
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2 min-w-0">
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-xs">
-                    {match.team1.player1.name.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold text-xs shadow-sm">
+                  {match.team1.player1.avatar_url ? (
+                    <img
+                      src={match.team1.player1.avatar_url}
+                      alt={match.team1.player1.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{match.team1.player1.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
-                <span className="text-xs font-medium truncate">{match.team1.player1.name}</span>
+                <span className="text-xs font-medium truncate max-w-[80px]">{match.team1.player1.name}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-xs">
-                    {match.team1.player2.name.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-purple-400 to-pink-400 text-white font-bold text-xs shadow-sm">
+                  {match.team1.player2.avatar_url ? (
+                    <img
+                      src={match.team1.player2.avatar_url}
+                      alt={match.team1.player2.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{match.team1.player2.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
-                <span className="text-xs font-medium truncate">{match.team1.player2.name}</span>
+                <span className="text-xs font-medium truncate max-w-[80px]">{match.team1.player2.name}</span>
               </div>
             </div>
 
             {/* Score Input - Mobile */}
-            <div className="flex items-center justify-center space-x-1 min-w-[80px]">
+            <div className="flex items-center justify-center space-x-1 min-w-[80px] flex-shrink-0">
               <input
                 type="number"
                 value={team1Score}
@@ -127,21 +140,33 @@ export function MatchCard({
             </div>
 
             {/* Team 2 Players - Mobile */}
-            <div className="flex-1 space-y-2 text-right">
+            <div className="flex-1 space-y-2 text-right min-w-0">
               <div className="flex items-center justify-end space-x-2">
-                <span className="text-xs font-medium truncate">{match.team2.player1.name}</span>
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-xs">
-                    {match.team2.player1.name.charAt(0).toUpperCase()}
-                  </span>
+                <span className="text-xs font-medium truncate max-w-[80px]">{match.team2.player1.name}</span>
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-400 to-yellow-400 text-white font-bold text-xs shadow-sm">
+                  {match.team2.player1.avatar_url ? (
+                    <img
+                      src={match.team2.player1.avatar_url}
+                      alt={match.team2.player1.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{match.team2.player1.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center justify-end space-x-2">
-                <span className="text-xs font-medium truncate">{match.team2.player2.name}</span>
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-xs">
-                    {match.team2.player2.name.charAt(0).toUpperCase()}
-                  </span>
+                <span className="text-xs font-medium truncate max-w-[80px]">{match.team2.player2.name}</span>
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-400 to-yellow-400 text-white font-bold text-xs shadow-sm">
+                  {match.team2.player2.avatar_url ? (
+                    <img
+                      src={match.team2.player2.avatar_url}
+                      alt={match.team2.player2.name}
+                      className="w-5 h-5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{match.team2.player2.name.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -151,28 +176,20 @@ export function MatchCard({
         {/* Desktop Layout */}
         <div className="hidden sm:flex sm:items-center w-full">
           {/* Team 1 Players */}
-          <div className="w-2/5 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-xs">
-                  {match.team1.player1.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm font-medium w-16 truncate">{match.team1.player1.name}</span>
+          <div className="w-2/5 flex items-center justify-between min-w-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <UserAvatar user={match.team1.player1} size="sm" />
+              <span className="text-sm font-medium truncate max-w-[100px]">{match.team1.player1.name}</span>
             </div>
-            <span className="text-gray-400 text-sm">-</span>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium w-16 truncate text-right">{match.team1.player2.name}</span>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-xs">
-                  {match.team1.player2.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
+            <span className="text-gray-400 text-sm flex-shrink-0">-</span>
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className="text-sm font-medium truncate max-w-[100px] text-right">{match.team1.player2.name}</span>
+              <UserAvatar user={match.team1.player2} size="sm" />
             </div>
           </div>
 
           {/* Score Input */}
-          <div className="w-1/5 flex items-center justify-center space-x-2">
+          <div className="w-1/5 flex items-center justify-center space-x-2 flex-shrink-0">
             <input
               type="number"
               value={team1Score}
@@ -197,23 +214,15 @@ export function MatchCard({
           </div>
 
           {/* Team 2 Players */}
-          <div className="w-2/5 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-xs">
-                  {match.team2.player1.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <span className="text-sm font-medium w-16 truncate">{match.team2.player1.name}</span>
+          <div className="w-2/5 flex items-center justify-between min-w-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <UserAvatar user={match.team2.player1} size="sm" />
+              <span className="text-sm font-medium truncate max-w-[100px]">{match.team2.player1.name}</span>
             </div>
-            <span className="text-gray-400 text-sm">-</span>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium w-16 truncate text-right">{match.team2.player2.name}</span>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-xs">
-                  {match.team2.player2.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
+            <span className="text-gray-400 text-sm flex-shrink-0">-</span>
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className="text-sm font-medium truncate max-w-[100px] text-right">{match.team2.player2.name}</span>
+              <UserAvatar user={match.team2.player2} size="sm" />
             </div>
           </div>
         </div>
