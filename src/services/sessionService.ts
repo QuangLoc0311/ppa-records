@@ -118,7 +118,7 @@ export const sessionService = {
       if (sessionError) throw sessionError;
 
       // Create matches
-      const matchInserts = sessionData.matches.map((match, index) => ({
+      const matchInserts = sessionData.matches.map((_match, index) => ({
         session_id: session.id,
         match_number: index + 1,
         status: 'scheduled',
