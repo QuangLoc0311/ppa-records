@@ -11,13 +11,18 @@ interface MatchPlayerData {
 
 interface DatabaseMatch {
   id: string;
+  session_id: string;
+  match_number: number;
   created_at: string;
   team1_score?: number;
   team2_score?: number;
+  status: string;
   match_players: MatchPlayerData[];
 }
 
 export interface CreateMatchData {
+  sessionId: string;
+  matchNumber: number;
   team1Player1Id: string;
   team1Player2Id: string;
   team2Player1Id: string;
@@ -88,7 +93,11 @@ export const matchService = {
       // First create the match
       const { data: match, error: matchError } = await supabase
         .from('matches')
-        .insert([{}])
+        .insert([{
+          session_id: matchData.sessionId,
+          match_number: matchData.matchNumber,
+          status: 'scheduled',
+        }])
         .select()
         .single();
 
@@ -121,6 +130,7 @@ export const matchService = {
         .update({
           team1_score: resultData.team1Score,
           team2_score: resultData.team2Score,
+          status: 'completed',
         })
         .eq('id', resultData.matchId);
 

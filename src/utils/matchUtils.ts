@@ -1,4 +1,4 @@
-import type { UIMatch, Player } from '../types';
+import type { UIMatch, Player, MatchStatus } from '../types';
 
 interface MatchPlayerData {
   player_id: string;
@@ -8,9 +8,12 @@ interface MatchPlayerData {
 
 interface DatabaseMatch {
   id: string;
+  session_id: string;
+  match_number: number;
   created_at: string;
   team1_score?: number;
   team2_score?: number;
+  status: string;
   match_players: MatchPlayerData[];
 }
 
@@ -34,6 +37,8 @@ export function transformMatchesToUI(matches: DatabaseMatch[]): UIMatch[] {
 
     return {
       id: match.id,
+      sessionId: match.session_id,
+      matchNumber: match.match_number,
       team1: {
         id: `team1-${match.id}`,
         player1: team1Players[0],
@@ -49,6 +54,7 @@ export function transformMatchesToUI(matches: DatabaseMatch[]): UIMatch[] {
       team1Score: match.team1_score || 0,
       team2Score: match.team2_score || 0,
       winner,
+      status: match.status as MatchStatus,
       createdAt: match.created_at,
       updatedAt: match.created_at, // Using created_at as updated_at for now
     };

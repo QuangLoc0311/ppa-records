@@ -82,13 +82,29 @@ CREATE TABLE players (
 );
 ```
 
+### Sessions Table
+```sql
+CREATE TABLE sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  status TEXT CHECK (status IN ('draft', 'in_progress', 'completed', 'cancelled')) DEFAULT 'draft',
+  session_duration_minutes INTEGER NOT NULL,
+  match_duration_minutes INTEGER NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ### Matches Table
 ```sql
 CREATE TABLE matches (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
+  match_number INTEGER NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   team1_score INTEGER,
-  team2_score INTEGER
+  team2_score INTEGER,
+  status TEXT CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled')) DEFAULT 'scheduled'
 );
 ```
 

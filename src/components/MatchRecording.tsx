@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Users, Play, CheckSquare, Square, User } from 'lucide-react';
+import { Trophy, Users, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { MatchCard } from './MatchCard';
+import { PlayerCard } from './PlayerCard';
 import type { Player, UIMatch, Team } from '../types';
 import { playerService, matchService, scoreService } from '../services';
 
@@ -80,11 +81,14 @@ export function MatchRecording() {
 
     return {
       id: `match-${Date.now()}`,
+      sessionId: 'temp-session',
+      matchNumber: 1,
       team1,
       team2,
       team1Score: 0,
       team2Score: 0,
       winner: null,
+      status: 'scheduled',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -113,6 +117,8 @@ export function MatchRecording() {
     try {
       // Create match with players
       await matchService.createMatch({
+        sessionId: match.sessionId,
+        matchNumber: match.matchNumber,
         team1Player1Id: match.team1.player1.id,
         team1Player2Id: match.team1.player2.id,
         team2Player1Id: match.team2.player1.id,
@@ -194,94 +200,14 @@ export function MatchRecording() {
               {players.map((player) => {
                 const isSelected = selectedPlayers.has(player.id);
                 return (
-                  <div
+                  <PlayerCard
                     key={player.id}
-                    onClick={() => handlePlayerToggle(player.id)}
-                    className={`group relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 transform hover:scale-105 ${
-                      isSelected
-                        ? 'bg-gradient-to-br from-green-500 to-green-600 border-green-500 shadow-lg shadow-green-200'
-                        : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md'
-                    }`}
-                  >
-                    {/* Selection Indicator */}
-                    <div className={`absolute top-3 right-3 transition-all duration-200 ${
-                      isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-75 group-hover:opacity-100'
-                    }`}>
-                      {isSelected ? (
-                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
-                          <CheckSquare className="w-4 h-4 text-green-600" />
-                        </div>
-                      ) : (
-                        <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                          <Square className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Player Avatar */}
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ${
-                        isSelected 
-                          ? 'bg-white text-green-600' 
-                          : 'bg-gradient-to-br from-green-400 to-green-600'
-                      }`}>
-                        {player.avatar_url ? (
-                          <img
-                            src={player.avatar_url}
-                            alt={player.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-6 h-6" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`font-bold text-sm sm:text-base truncate ${
-                          isSelected ? 'text-white' : 'text-gray-800'
-                        }`}>
-                          {player.name}
-                        </h4>
-                        <p className={`text-xs capitalize ${
-                          isSelected ? 'text-green-100' : 'text-gray-500'
-                        }`}>
-                          {player.gender}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Player Stats */}
-                    <div className={`p-3 rounded-lg ${
-                      isSelected ? 'bg-white bg-opacity-20' : 'bg-gray-50'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs font-medium ${
-                          isSelected ? 'text-green-100' : 'text-gray-600'
-                        }`}>
-                          Skill Score
-                        </span>
-                        <span className={`text-sm font-bold ${
-                          isSelected ? 'text-white' : 'text-green-600'
-                        }`}>
-                          {player.score.toFixed(1)}
-                        </span>
-                      </div>
-                      
-                      {/* Skill Level Bar */}
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            isSelected ? 'bg-white' : 'bg-gradient-to-r from-green-400 to-green-600'
-                          }`}
-                          style={{ width: `${Math.min((player.score / 10) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Hover Effect */}
-                    {!isSelected && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-200"></div>
-                    )}
-                  </div>
+                    player={player}
+                    isSelected={isSelected}
+                    onClick={handlePlayerToggle}
+                    variant="selection"
+                    showScore={true}
+                  />
                 );
               })}
             </div>

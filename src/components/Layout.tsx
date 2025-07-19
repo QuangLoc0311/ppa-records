@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Users, Zap, BarChart3, Menu, X } from 'lucide-react';
+import ppaLogo from '../assets/ppa-logo.png';
 
 type Tab = 'players' | 'generator' | 'stats';
 
@@ -30,8 +31,12 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs sm:text-sm">P</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center">
+                <img 
+                  src={ppaLogo} 
+                  alt="PPA Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                 Pickleball Match Tracker
