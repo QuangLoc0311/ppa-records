@@ -8,6 +8,13 @@ export interface CreatePlayerData {
   score: number;
 }
 
+export interface UpdatePlayerData {
+  name?: string;
+  avatar_url?: string;
+  gender?: Gender;
+  score?: number;
+}
+
 export const playerService = {
   // Fetch all players
   async getPlayers(): Promise<Player[]> {
@@ -103,6 +110,24 @@ export const playerService = {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating player score:', error);
+      throw error;
+    }
+  },
+
+  // Update player information
+  async updatePlayer(playerId: string, playerData: UpdatePlayerData): Promise<Player> {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .update(playerData)
+        .eq('id', playerId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating player:', error);
       throw error;
     }
   },

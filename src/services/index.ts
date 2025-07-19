@@ -4,5 +4,5 @@ export { scoreService } from './scoreService';
 export { storageService } from './storageService';
 export { sessionService } from './sessionService';
 
-export type { CreatePlayerData } from './playerService';
+export type { CreatePlayerData, UpdatePlayerData } from './playerService';
 export type { CreateMatchData, UpdateMatchResultData } from './matchService'; 

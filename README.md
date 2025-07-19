@@ -10,6 +10,65 @@ A modern, mobile-first web application for managing pickleball matches with AI-p
 - **Statistics**: Track player performance and match history
 - **Mobile-First Design**: Optimized for mobile devices with responsive layout
 
+## 🧠 Advanced Matchmaking Algorithm
+
+The AI-powered matchmaking algorithm ensures fair, balanced, and engaging matches by considering multiple factors:
+
+### 🎯 **Core Benefits**
+
+#### **1. Fair Team Balance**
+- **Skill-Based Matching**: Teams are balanced based on player skill scores (0-10 scale)
+- **Dynamic Scoring**: Uses ELO-like rating system that adapts to player performance
+- **Optimal Combinations**: Evaluates all possible team combinations to find the most balanced matchups
+
+#### **2. Player Fatigue Management**
+- **Consecutive Match Prevention**: Prevents players from playing too many consecutive matches
+- **Rest Periods**: Ensures players get adequate rest between matches
+- **Gender-Specific Fatigue**: Different fatigue factors for male (0.2) and female (0.3) players
+- **Small Pool Optimization**: Adapts rules for small groups (5-6 players) vs larger groups
+
+#### **3. Session Planning Intelligence**
+- **Multi-Match Optimization**: Plans entire sessions, not just individual matches
+- **Player Rotation**: Ensures all players participate equally throughout the session
+- **Team Variety**: Minimizes repeated team partnerships to keep matches fresh
+- **Time Management**: Automatically calculates optimal number of matches based on session duration
+
+#### **4. Smart Player Selection**
+- **Priority-Based Selection**: Players who haven't played get highest priority
+- **Consecutive Match Limits**: Maximum 2-3 consecutive matches depending on pool size
+- **Forced Rotation**: For small pools, implements forced player rotation between matches
+- **Balance Override**: Team balance takes precedence over other factors when necessary
+
+### 🔧 **Algorithm Features**
+
+#### **Weighted Scoring System**
+- **Consecutive Match Penalty**: Highest priority (1000-2000x multiplier)
+- **Team Balance Score**: Second priority (100x multiplier for score differences)
+- **Fatigue Penalty**: Low priority (0.5x multiplier)
+- **No Rest Penalty**: Low priority (0.3x multiplier)
+- **Team Repetition Penalty**: Moderate priority (10x multiplier)
+
+#### **Adaptive Behavior**
+- **Small Pool Logic**: Relaxes rest rules for 5-6 players while maintaining fairness
+- **Large Pool Logic**: Stricter consecutive match limits for 7+ players
+- **Dynamic Match Count**: Calculates optimal matches based on session duration and match length
+- **Fallback Mechanisms**: Graceful handling when ideal conditions can't be met
+
+#### **Real-Time Optimization**
+- **Live Score Updates**: Player ratings adjust after each match
+- **Performance Tracking**: Monitors player participation and performance
+- **Session Continuity**: Maintains session state across multiple matches
+- **Progress Tracking**: Shows current match and session progress
+
+### 📊 **Algorithm Performance**
+
+The algorithm has been optimized for:
+- **Fairness**: Ensures balanced teams and equal player participation
+- **Engagement**: Keeps matches competitive and interesting
+- **Efficiency**: Fast generation even with complex constraints
+- **Flexibility**: Adapts to different group sizes and session lengths
+- **Reliability**: Handles edge cases and provides fallback options
+
 ## 📱 Mobile-First Design
 
 This application is built with mobile-first principles using Tailwind CSS:
@@ -125,7 +184,7 @@ CREATE TABLE match_players (
 In your Supabase dashboard, go to Storage and create a new bucket:
 - **Bucket name**: `images`
 - **Public bucket**: ✅ (checked)
-- **File size limit**: 5MB
+- **File size limit**: 10MB
 - **Allowed MIME types**: `image/jpeg`, `image/png`, `image/webp`
 
 ### 2. Storage Policies

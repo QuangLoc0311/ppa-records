@@ -52,7 +52,7 @@ export const storageService = {
 
   // Validate file type and size
   validateImageFile(file: File): { isValid: boolean; error?: string } {
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
     if (!allowedTypes.includes(file.type)) {
@@ -65,7 +65,7 @@ export const storageService = {
     if (file.size > maxSize) {
       return { 
         isValid: false, 
-        error: 'Image size must be less than 5MB' 
+        error: 'Image size must be less than 10MB' 
       };
     }
 

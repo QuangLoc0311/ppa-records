@@ -102,11 +102,31 @@ export function PlayerManagement() {
       }
 
       if (editingId) {
-        // For now, we'll just update the score since updatePlayer doesn't exist
+        // Update player with new data
         const currentPlayer = players.find(p => p.id === editingId);
-        if (currentPlayer && formData.skillLevel !== currentPlayer.score) {
-          const scoreChange = formData.skillLevel - currentPlayer.score;
-          await playerService.updatePlayerScore(editingId, scoreChange);
+        if (currentPlayer) {
+          // Update score if changed
+          if (formData.skillLevel !== currentPlayer.score) {
+            const scoreChange = formData.skillLevel - currentPlayer.score;
+            await playerService.updatePlayerScore(editingId, scoreChange);
+          }
+          
+          // Update other fields if they changed
+          const updates: Partial<Player> = {};
+          if (formData.name !== currentPlayer.name) {
+            updates.name = formData.name;
+          }
+          if (formData.gender !== currentPlayer.gender) {
+            updates.gender = formData.gender;
+          }
+                     if (finalImageUrl !== currentPlayer.avatar_url) {
+             updates.avatar_url = finalImageUrl || undefined;
+           }
+          
+          // If we have updates, call updatePlayer
+          if (Object.keys(updates).length > 0) {
+            await playerService.updatePlayer(editingId, updates);
+          }
         }
         setEditingId(null);
       } else {
@@ -140,6 +160,10 @@ export function PlayerManagement() {
     setImagePreview('');
     setUploadedImage(null);
     setUploadError('');
+    // Clear the file input when editing
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -280,7 +304,30 @@ export function PlayerManagement() {
                             Choose Image
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            PNG, JPG, WebP up to 5MB
+                            PNG, JPG, WebP up to 10MB
+                          </p>
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Change Image Button - Show when editing with existing avatar */}
+                {editingId && formData.avatar_url && !imagePreview && (
+                  <div className="space-y-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 py-4 rounded-xl"
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">
+                            Change Image
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Upload a new profile picture
                           </p>
                         </div>
                       </div>
