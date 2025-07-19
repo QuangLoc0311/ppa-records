@@ -220,12 +220,11 @@ export function generateSession(
     return [];
   }
 
-  const players = clonePlayers(rawPlayers);
+  // Shuffle the players to ensure different results each time
+  const shuffledPlayers = [...rawPlayers].sort(() => Math.random() - 0.5);
+  const players = clonePlayers(shuffledPlayers);
   const matches: SessionMatch[] = [];
   const totalMatches = Math.floor(sessionMinutes / matchDurationMinutes);
-
-  console.log(`Generating ${totalMatches} matches for ${players.length} players`);
-  console.log('Initial players:', players.map(p => `${p.name} (${p.gender}, ${p.score})`));
 
   for (let matchIndex = 0; matchIndex < totalMatches; matchIndex++) {
     console.log(`\n--- Match ${matchIndex + 1} ---`);

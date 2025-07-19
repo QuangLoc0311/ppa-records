@@ -19,10 +19,48 @@ export function MatchGenerator() {
   const [matchDuration, setMatchDuration] = useState(15);
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number | null>(null);
   const [showGeneratedMatches, setShowGeneratedMatches] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlayers();
+    loadCurrentSession();
   }, []);
+
+  const loadCurrentSession = async () => {
+    try {
+      // Fetch all sessions and find the one with status 'in_progress'
+      const sessions = await sessionService.getSessions();
+      const activeSession = sessions.find(session => session.status === 'in_progress');
+      
+      if (activeSession) {
+        // Load the active session with its matches
+        const sessionWithMatches = await sessionService.getSessionById(activeSession.id);
+        if (sessionWithMatches) {
+          setSessionMatches(sessionWithMatches.matches);
+          setSessionMinutes(sessionWithMatches.sessionDurationMinutes);
+          setMatchDuration(sessionWithMatches.matchDurationMinutes);
+          setCurrentSessionId(activeSession.id);
+          setShowGeneratedMatches(true);
+          
+          // Find the current match index (first uncompleted match)
+          const currentMatchIdx = sessionWithMatches.matches.findIndex(match => !match.winner);
+          setCurrentMatchIndex(currentMatchIdx !== -1 ? currentMatchIdx : null);
+          
+          // Auto-select players participating in this session
+          const sessionPlayers = new Set<string>();
+          sessionWithMatches.matches.forEach(match => {
+            sessionPlayers.add(match.team1.player1.id);
+            sessionPlayers.add(match.team1.player2.id);
+            sessionPlayers.add(match.team2.player1.id);
+            sessionPlayers.add(match.team2.player2.id);
+          });
+          setSelectedPlayers(sessionPlayers);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading current session:', error);
+    }
+  };
 
   const fetchPlayers = async () => {
     try {
@@ -96,14 +134,14 @@ export function MatchGenerator() {
       // Update session status to in_progress
       await sessionService.updateSessionStatus(session.id, 'in_progress');
 
-      // Update local state to show matches are now active
-      const updatedMatches = sessionMatches.map(match => ({
-        ...match,
-        sessionId: session.id,
-        status: 'scheduled' as const,
-      }));
-      setSessionMatches(updatedMatches);
-      setCurrentMatchIndex(0);
+      // Fetch the session with real match IDs to update local state
+      const sessionWithRealIds = await sessionService.getSessionById(session.id);
+      
+      if (sessionWithRealIds) {
+        // Update local state with matches that have real database IDs
+        setSessionMatches(sessionWithRealIds.matches);
+        setCurrentMatchIndex(0);
+      }
 
       alert('Session activated successfully! You can now start playing matches.');
     } catch (error) {
@@ -118,7 +156,16 @@ export function MatchGenerator() {
     setShowGeneratedMatches(false);
     setSessionMatches([]);
     setCurrentMatchIndex(null);
-    handleGenerateSession();
+    
+    // Add a small delay to ensure state is cleared before regenerating
+    setTimeout(() => {
+      const selectedPlayersList = getSelectedPlayersList();
+      const matches = generateSession(selectedPlayersList, sessionMinutes, matchDuration);
+      setSessionMatches(matches.map(m => convertSessionMatchToUIMatch(m, `session-${Date.now()}`)));
+      setIsGenerating(false);
+      setShowGeneratedMatches(true);
+      setCurrentMatchIndex(null);
+    }, 100);
   };
 
   const handleSaveMatchResult = async (match: UIMatch, team1Score: number, team2Score: number) => {
@@ -155,7 +202,9 @@ export function MatchGenerator() {
         setCurrentMatchIndex(null);
         // Update session status to completed if all matches are done
         const completedMatches = updatedMatches.filter(m => m.winner);
-        if (completedMatches.length === sessionMatches.length) {
+        if (completedMatches.length === sessionMatches.length && currentSessionId) {
+          // Update session status to completed
+          await sessionService.updateSessionStatus(currentSessionId, 'completed');
           // Session is complete
           alert('Session completed! All matches have been played.');
         }
@@ -238,7 +287,7 @@ export function MatchGenerator() {
       )}
 
       {/* Generated Session Preview */}
-      {showGeneratedMatches && sessionMatches.length > 0 && (
+      {showGeneratedMatches && sessionMatches.length > 0 && currentMatchIndex === null && (
         <SessionPreview
           sessionMatches={sessionMatches}
           participantSummary={participantSummary}

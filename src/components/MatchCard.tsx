@@ -69,10 +69,10 @@ export function MatchCard({
       <div className="space-y-4">
         {/* Team Labels Row */}
         <div className="flex items-center justify-between">
+          <div className="w-8 h-6 bg-gradient-to-r from-purple-400 to-pink-400 rounded flex items-center justify-center shadow-sm">
+            <span className="text-white font-bold text-xs">T1</span>
+          </div>
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-6 bg-gradient-to-r from-purple-400 to-pink-400 rounded flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-xs">T1</span>
-            </div>
             <span className="text-xs text-gray-600">Score</span>
           </div>
           <div className="w-8 h-6 bg-gradient-to-r from-orange-400 to-yellow-400 rounded flex items-center justify-center shadow-sm">
@@ -113,7 +113,7 @@ export function MatchCard({
               min="0"
               max="21"
               disabled={isCompleted}
-              className="w-12 px-2 py-2 text-center text-sm border-2 border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 bg-white"
+              className="w-12 px-2 py-2 text-center text-sm border-2 border-purple-300 rounded-md focus:outline-none disabled:bg-gray-100 bg-white"
             />
             <span className="text-gray-500 font-bold">-</span>
             <input
@@ -124,7 +124,7 @@ export function MatchCard({
               min="0"
               max="21"
               disabled={isCompleted}
-              className="w-12 px-2 py-2 text-center text-sm border-2 border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 bg-white"
+              className="w-12 px-2 py-2 text-center text-sm border-2 border-orange-300 rounded-md focus:outline-none disabled:bg-gray-100 bg-white"
             />
           </div>
 
