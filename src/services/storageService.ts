@@ -1,29 +1,30 @@
 import { supabase } from '../lib/supabase';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+
 export const storageService = {
   // Upload image to Supabase Storage
   async uploadImage(file: File, folder: string = 'avatars'): Promise<string> {
     try {
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      // Upload file to Supabase Storage
-      const { error } = await supabase.storage
-        .from('images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder);
 
-      if (error) throw error;
+      // Include auth token if available (not required for public function)
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(fileName);
-
-      return publicUrl;
+      const response = await fetch(`${supabaseUrl}/functions/v1/storage?action=upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || 'Failed to upload image');
+      }
+      const json = await response.json();
+      return json.publicUrl as string;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;
@@ -39,11 +40,21 @@ export const storageService = {
       const folder = urlParts[urlParts.length - 2];
       const filePath = `${folder}/${fileName}`;
 
-      const { error } = await supabase.storage
-        .from('images')
-        .remove([filePath]);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
 
-      if (error) throw error;
+      const response = await fetch(`${supabaseUrl}/functions/v1/storage?action=delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ filePath }),
+      });
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || 'Failed to delete image');
+      }
     } catch (error) {
       console.error('Error deleting image:', error);
       throw error;

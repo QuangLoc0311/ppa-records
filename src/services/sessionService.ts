@@ -5,13 +5,11 @@ export const sessionService = {
   // Fetch all sessions
   async getSessions(): Promise<Session[]> {
     try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.functions.invoke('sessions', {
+        body: { action: 'getSessions' },
+      });
       if (error) throw error;
-      return data || [];
+      return (data?.data as Session[]) || [];
     } catch (error) {
       console.error('Error fetching sessions:', error);
       throw error;
@@ -21,29 +19,12 @@ export const sessionService = {
   // Fetch session by ID with matches
   async getSessionById(sessionId: string): Promise<UISession | null> {
     try {
-      // Get session
-      const { data: session, error: sessionError } = await supabase
-        .from('sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Get matches for this session
-      const { data: matches, error: matchesError } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          match_players (
-            *,
-            players (*)
-          )
-        `)
-        .eq('session_id', sessionId)
-        .order('match_number', { ascending: true });
-
-      if (matchesError) throw matchesError;
+      const { data, error } = await supabase.functions.invoke('sessions', {
+        body: { action: 'getSessionById', payload: { sessionId } },
+      });
+      if (error) throw error;
+      const session = (data?.session as any) as Session;
+      const matches = (data?.matches as any[]) || [];
 
       // Transform to UI format
       const uiMatches = matches?.map(match => {
@@ -101,74 +82,11 @@ export const sessionService = {
   // Create a new session with matches
   async createSession(sessionData: CreateSessionData): Promise<Session> {
     try {
-      // Create session
-      const { data: session, error: sessionError } = await supabase
-        .from('sessions')
-        .insert([
-          {
-            name: sessionData.name,
-            session_duration_minutes: sessionData.sessionDurationMinutes,
-            match_duration_minutes: sessionData.matchDurationMinutes,
-            status: 'draft',
-          }
-        ])
-        .select()
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Create matches
-      const matchInserts = sessionData.matches.map((_match, index) => ({
-        session_id: session.id,
-        match_number: index + 1,
-        status: 'scheduled',
-      }));
-
-      const { data: matches, error: matchesError } = await supabase
-        .from('matches')
-        .insert(matchInserts)
-        .select();
-
-      if (matchesError) throw matchesError;
-
-      // Create match players
-      const matchPlayerInserts = [];
-      for (let i = 0; i < sessionData.matches.length; i++) {
-        const match = sessionData.matches[i];
-        const matchId = matches[i].id;
-
-        // Team 1 players
-        matchPlayerInserts.push({
-          match_id: matchId,
-          player_id: match.team1.player1.id,
-          team: 1,
-        });
-        matchPlayerInserts.push({
-          match_id: matchId,
-          player_id: match.team1.player2.id,
-          team: 1,
-        });
-
-        // Team 2 players
-        matchPlayerInserts.push({
-          match_id: matchId,
-          player_id: match.team2.player1.id,
-          team: 2,
-        });
-        matchPlayerInserts.push({
-          match_id: matchId,
-          player_id: match.team2.player2.id,
-          team: 2,
-        });
-      }
-
-      const { error: matchPlayersError } = await supabase
-        .from('match_players')
-        .insert(matchPlayerInserts);
-
-      if (matchPlayersError) throw matchPlayersError;
-
-      return session;
+      const { data, error } = await supabase.functions.invoke('sessions', {
+        body: { action: 'createSession', payload: sessionData },
+      });
+      if (error) throw error;
+      return (data?.data as Session)!;
     } catch (error) {
       console.error('Error creating session:', error);
       throw error;
@@ -178,14 +96,9 @@ export const sessionService = {
   // Update session status
   async updateSessionStatus(sessionId: string, status: SessionStatus): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('sessions')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', sessionId);
-
+      const { error } = await supabase.functions.invoke('sessions', {
+        body: { action: 'updateSessionStatus', payload: { sessionId, status } },
+      });
       if (error) throw error;
     } catch (error) {
       console.error('Error updating session status:', error);
@@ -196,11 +109,9 @@ export const sessionService = {
   // Delete session
   async deleteSession(sessionId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('sessions')
-        .delete()
-        .eq('id', sessionId);
-
+      const { error } = await supabase.functions.invoke('sessions', {
+        body: { action: 'deleteSession', payload: { sessionId } },
+      });
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting session:', error);
