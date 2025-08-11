@@ -15,17 +15,20 @@ export interface UpdatePlayerData {
   score?: number;
 }
 
+async function invokePlayers<TResponse>(action: string, payload?: unknown): Promise<TResponse> {
+  const { data, error } = await supabase.functions.invoke('players', {
+    body: { action, payload },
+  });
+  if (error) throw error;
+  return data as TResponse;
+}
+
 export const playerService = {
   // Fetch all players
   async getPlayers(): Promise<Player[]> {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
+      const res = await invokePlayers<{ data: Player[] }>('getPlayers');
+      return res.data || [];
     } catch (error) {
       console.error('Error fetching players:', error);
       throw error;
@@ -35,13 +38,8 @@ export const playerService = {
   // Fetch players ordered by score (for matchmaking)
   async getPlayersByScore(): Promise<Player[]> {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .order('score', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      const res = await invokePlayers<{ data: Player[] }>('getPlayersByScore');
+      return res.data || [];
     } catch (error) {
       console.error('Error fetching players by score:', error);
       throw error;
@@ -51,21 +49,8 @@ export const playerService = {
   // Create a new player
   async createPlayer(playerData: CreatePlayerData): Promise<Player> {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .insert([
-          {
-            name: playerData.name,
-            avatar_url: playerData.avatar_url || '',
-            score: playerData.score, 
-            gender: playerData.gender,
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const res = await invokePlayers<{ data: Player }>('createPlayer', playerData);
+      return res.data as Player;
     } catch (error) {
       console.error('Error creating player:', error);
       throw error;
@@ -75,12 +60,7 @@ export const playerService = {
   // Delete a player
   async deletePlayer(playerId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('players')
-        .delete()
-        .eq('id', playerId);
-
-      if (error) throw error;
+      await invokePlayers('deletePlayer', { playerId });
     } catch (error) {
       console.error('Error deleting player:', error);
       throw error;
@@ -90,24 +70,7 @@ export const playerService = {
   // Update player score
   async updatePlayerScore(playerId: string, scoreChange: number): Promise<void> {
     try {
-      // First get current score
-      const { data: currentPlayer, error: fetchError } = await supabase
-        .from('players')
-        .select('score')
-        .eq('id', playerId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Calculate new score with minimum of 0.0 and maximum of 10.0
-      const newScore = Math.max(Math.min((currentPlayer.score || 5.0) + scoreChange, 10.0), 0.0);
-
-      const { error } = await supabase
-        .from('players')
-        .update({ score: newScore })
-        .eq('id', playerId);
-
-      if (error) throw error;
+      await invokePlayers('updatePlayerScore', { playerId, scoreChange });
     } catch (error) {
       console.error('Error updating player score:', error);
       throw error;
@@ -117,15 +80,8 @@ export const playerService = {
   // Update player information
   async updatePlayer(playerId: string, playerData: UpdatePlayerData): Promise<Player> {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .update(playerData)
-        .eq('id', playerId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      const res = await invokePlayers<{ data: Player }>('updatePlayer', { playerId, updates: playerData });
+      return res.data as Player;
     } catch (error) {
       console.error('Error updating player:', error);
       throw error;
@@ -135,14 +91,8 @@ export const playerService = {
   // Get player by ID
   async getPlayerById(playerId: string): Promise<Player | null> {
     try {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .single();
-
-      if (error) throw error;
-      return data;
+      const res = await invokePlayers<{ data: Player | null }>('getPlayerById', { playerId });
+      return res.data ?? null;
     } catch (error) {
       console.error('Error fetching player by ID:', error);
       throw error;

@@ -3,16 +3,40 @@ export type Gender = 'male' | 'female';
 export type SessionStatus = 'draft' | 'in_progress' | 'completed' | 'cancelled';
 export type MatchStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
 
+// User interface matching your schema
+export interface User {
+  id: string;
+  username: string;
+  display_name?: string;
+  email: string;
+  created_at: string;
+}
+
+// Group interface
+export interface Group {
+  id: string;
+  name: string;
+  host_player_id?: string;
+  description?: string;
+  created_at: string;
+}
+
+// Player interface
 export interface Player {
   id: string;
+  user_id: string;
+  group_id: string;
   name: string;
   avatar_url?: string;
   gender: Gender;
-  score: number; // float 0-10 with one decimal place
+  score: number;
+  created_at: string;
 }
 
+// Session interface
 export interface Session {
   id: string;
+  group_id: string;
   name: string;
   status: SessionStatus;
   session_duration_minutes: number;
@@ -66,6 +90,7 @@ export interface UIMatch {
 
 export interface UISession {
   id: string;
+  playerId: string;
   name: string;
   status: SessionStatus;
   sessionDurationMinutes: number;
@@ -82,8 +107,62 @@ export interface MatchResult {
 }
 
 export interface CreateSessionData {
+  playerId: string;
   name: string;
   sessionDurationMinutes: number;
   matchDurationMinutes: number;
   matches: Omit<UIMatch, 'id' | 'sessionId' | 'createdAt' | 'updatedAt'>[];
-} 
+}
+
+// Authentication interfaces
+export interface AuthRequest {
+  email: string;
+}
+
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export interface VerificationCode {
+  id: string;
+  email: string;
+  code: string;
+  expires_at: string;
+  created_at: string;
+}
+
+// Group management interfaces
+export interface CreateGroupData {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateGroupData {
+  name?: string;
+  description?: string;
+}
+
+// Updated player creation data
+export interface CreatePlayerData {
+  groupId: string;
+  name: string;
+  avatar_url?: string;
+  gender: Gender;
+  score: number;
+}
+
+// Group with players
+export interface GroupWithPlayers extends Group {
+  players: Player[];
+}
+
+// Player with sessions
+export interface PlayerWithSessions extends Player {
+  sessions: Session[];
+}

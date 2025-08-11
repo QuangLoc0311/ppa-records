@@ -129,14 +129,39 @@ This application is built with mobile-first principles using Tailwind CSS:
 
 ## 🗄️ Database Schema
 
+### Users Table
+```sql
+CREATE TABLE users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  display_name TEXT,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ### Players Table
 ```sql
 CREATE TABLE players (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   avatar_url TEXT,
   gender TEXT CHECK (gender IN ('male', 'female')),
   score DECIMAL(3,1) DEFAULT 5.0 CHECK (score >= 0.0 AND score <= 10.0),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_user_group UNIQUE (user_id, group_id)
+);
+```
+
+### Groups Table
+```sql
+CREATE TABLE groups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  host_player_id UUID, -- Will reference players later
+  description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
@@ -145,6 +170,7 @@ CREATE TABLE players (
 ```sql
 CREATE TABLE sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   status TEXT CHECK (status IN ('draft', 'in_progress', 'completed', 'cancelled')) DEFAULT 'draft',
   session_duration_minutes INTEGER NOT NULL,
@@ -175,6 +201,143 @@ CREATE TABLE match_players (
   player_id UUID REFERENCES players(id) ON DELETE CASCADE,
   team INTEGER CHECK (team IN (1, 2)),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Relationship
+```sql
+ALTER TABLE players
+  ADD CONSTRAINT unique_user_group UNIQUE (user_id, group_id);
+```
+
+### Policies
+```sql
+CREATE POLICY "Select own user"
+ON users
+FOR SELECT
+USING (id = auth.uid());
+
+CREATE POLICY "Update own user"
+ON users
+FOR UPDATE
+USING (id = auth.uid());
+
+CREATE POLICY "Select groups I belong to"
+ON groups
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    WHERE players.group_id = groups.id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Insert groups"
+ON groups
+FOR INSERT
+WITH CHECK (true); -- Allow group creation (could be limited further if needed)
+
+CREATE POLICY "Update groups I belong to"
+ON groups
+FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    WHERE players.group_id = groups.id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Delete groups I belong to"
+ON groups
+FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    WHERE players.group_id = groups.id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Select players in my groups"
+ON players
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players AS me
+    WHERE me.group_id = players.group_id
+      AND me.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Insert player into my group"
+ON players
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM players AS me
+    WHERE me.group_id = players.group_id
+      AND me.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Select sessions in my groups"
+ON sessions
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    WHERE players.group_id = sessions.group_id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Select matches in my groups"
+ON matches
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    JOIN sessions ON sessions.group_id = players.group_id
+    WHERE sessions.id = matches.session_id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Select match_players in my groups"
+ON match_players
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1
+    FROM players
+    JOIN matches ON matches.id = match_players.match_id
+    JOIN sessions ON sessions.id = matches.session_id
+    WHERE sessions.group_id = players.group_id
+      AND players.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Only host player can create session"
+ON sessions
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM groups
+    JOIN players
+      ON players.id = groups.host_player_id
+    WHERE groups.id = sessions.group_id
+      AND players.user_id = auth.uid()
+  )
 );
 ```
 

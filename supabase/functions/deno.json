@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  },
+  "lint": {
+    "rules": {
+      "no-explicit-any": "off"
+    }
+  }
+}
