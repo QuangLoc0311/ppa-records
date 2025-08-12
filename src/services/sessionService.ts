@@ -65,6 +65,7 @@ export const sessionService = {
 
       return {
         id: session.id,
+        groupId: session.group_id,
         name: session.name,
         status: session.status,
         sessionDurationMinutes: session.session_duration_minutes,

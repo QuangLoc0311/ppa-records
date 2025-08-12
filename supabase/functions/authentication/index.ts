@@ -1,21 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
+import { getSupabaseClient } from "../_shared/supabaseClient.ts";
+import { handleOptions, json } from "../_shared/cors.ts";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, serviceRoleKey);
+const supabase = getSupabaseClient();
 
 // JWT secret (you should set this in environment variables)
 const JWT_SECRET = Deno.env.get('JWT_SECRET') || 'your-secret-key-change-this';
-
-function json(data: any, init?: ResponseInit) {
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-}
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -71,8 +62,10 @@ async function verifyToken(token: string): Promise<string | null> {
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 200 });
+  const origin = req.headers.get("origin");
+  
+  if (req.method === "OPTIONS") {
+    return handleOptions(origin);
   }
 
   try {
@@ -125,7 +118,7 @@ serve(async (req: Request) => {
         // For now, just log it
         console.log(`Verification code for ${email}: ${code}`);
 
-        return json({ success: true });
+        return json({ success: true }, origin);
       }
 
       case 'verifyCode': {
@@ -141,7 +134,7 @@ serve(async (req: Request) => {
           .single();
 
         if (codeError || !verificationCode) {
-          return json({ error: 'Invalid or expired code' }, { status: 400 });
+          return json({ error: 'Invalid or expired code' }, origin, { status: 400 });
         }
 
         // Get user
@@ -165,20 +158,20 @@ serve(async (req: Request) => {
         return json({
           user,
           token
-        });
+        }, origin);
       }
 
       case 'getCurrentUser': {
         const authHeader = req.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return json({ error: 'Missing authorization header' }, { status: 401 });
+          return json({ error: 'Missing authorization header' }, origin, { status: 401 });
         }
 
         const token = authHeader.split(' ')[1];
         const userId = await verifyToken(token);
         
         if (!userId) {
-          return json({ error: 'Invalid or expired token' }, { status: 401 });
+          return json({ error: 'Invalid or expired token' }, origin, { status: 401 });
         }
 
         // Get user data
@@ -190,14 +183,14 @@ serve(async (req: Request) => {
 
         if (userError) throw userError;
 
-        return json({ user });
+        return json({ user }, origin);
       }
 
       default:
-        return json({ error: 'Unknown action' }, { status: 400 });
+        return json({ error: 'Unknown action' }, origin, { status: 400 });
     }
   } catch (error) {
     console.error('Auth function error:', error);
-    return json({ error: 'Internal server error' }, { status: 500 });
+    return json({ error: 'Internal server error' }, origin, { status: 500 });
   }
 });

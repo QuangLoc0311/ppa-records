@@ -90,7 +90,7 @@ export interface UIMatch {
 
 export interface UISession {
   id: string;
-  playerId: string;
+  groupId: string;
   name: string;
   status: SessionStatus;
   sessionDurationMinutes: number;
@@ -107,8 +107,8 @@ export interface MatchResult {
 }
 
 export interface CreateSessionData {
-  playerId: string;
   name: string;
+  groupId: string;
   sessionDurationMinutes: number;
   matchDurationMinutes: number;
   matches: Omit<UIMatch, 'id' | 'sessionId' | 'createdAt' | 'updatedAt'>[];

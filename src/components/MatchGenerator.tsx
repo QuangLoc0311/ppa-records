@@ -118,6 +118,7 @@ export function MatchGenerator() {
       // Create session with matches
       const session = await sessionService.createSession({
         name: `Session ${new Date().toLocaleDateString()}`,
+        groupId: "",
         sessionDurationMinutes: sessionMinutes,
         matchDurationMinutes: matchDuration,
         matches: sessionMatches.map(match => ({
