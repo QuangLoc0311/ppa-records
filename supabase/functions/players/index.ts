@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { getSupabaseClient } from "../_shared/supabaseClient.ts";
+import { handleOptions, json } from "../_shared/cors.ts";
 
 type Gender = 'male' | 'female';
-
 interface UpdatePlayerData {
   name?: string;
   avatar_url?: string;
@@ -11,22 +11,14 @@ interface UpdatePlayerData {
   score?: number;
 }
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-function json(data: any, init?: ResponseInit) {
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-}
+const supabase = getSupabaseClient();
 
 serve(async (req: Request) => {
   try {
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' } });
+    const origin = req.headers.get("origin");
+    
+    if (req.method === "OPTIONS") {
+      return handleOptions(origin);
     }
 
     const { action, payload } = await req.json();
@@ -38,7 +30,7 @@ serve(async (req: Request) => {
           .select('*')
           .order('name', { ascending: true });
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'getPlayersByScore': {
@@ -47,7 +39,7 @@ serve(async (req: Request) => {
           .select('*')
           .order('score', { ascending: false });
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'createPlayer': {
@@ -58,7 +50,7 @@ serve(async (req: Request) => {
           .select()
           .single();
         if (error) throw error;
-        return json({ data }, { status: 201 });
+        return json({ data }, origin, { status: 201 });
       }
 
       case 'deletePlayer': {
@@ -68,7 +60,7 @@ serve(async (req: Request) => {
           .delete()
           .eq('id', playerId);
         if (error) throw error;
-        return json({ ok: true });
+        return json({ ok: true }, origin);
       }
 
       case 'updatePlayerScore': {
@@ -86,7 +78,7 @@ serve(async (req: Request) => {
           .update({ score: newScore })
           .eq('id', playerId);
         if (error) throw error;
-        return json({ ok: true, score: newScore });
+        return json({ ok: true, score: newScore }, origin);
       }
 
       case 'updatePlayer': {
@@ -98,7 +90,7 @@ serve(async (req: Request) => {
           .select()
           .single();
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'getPlayerById': {
@@ -109,15 +101,15 @@ serve(async (req: Request) => {
           .eq('id', playerId)
           .single();
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       default:
-        return json({ error: 'Unknown action' }, { status: 400 });
+        return json({ error: 'Unknown action' }, origin, { status: 400 });
     }
   } catch (error) {
     console.error('players function error', error);
-    return json({ error: String(error) }, { status: 500 });
+    return json({ error: String(error) }, origin, { status: 500 });
   }
 });
 

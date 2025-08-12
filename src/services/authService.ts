@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { AuthRequest, VerifyCodeRequest, AuthResponse, User } from '../types';
+import type { AuthResponse, User } from '../types';
 
 export const authService = {
   // Request verification code

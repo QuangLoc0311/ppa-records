@@ -1,22 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { getSupabaseClient } from "../_shared/supabaseClient.ts";
+import { handleOptions, json } from "../_shared/cors.ts";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-function json(data: any, init?: ResponseInit) {
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    ...init,
-  });
-}
+const supabase = getSupabaseClient();
 
 serve(async (req: Request) => {
   try {
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' } });
+    const origin = req.headers.get("origin");
+    
+    if (req.method === "OPTIONS") {
+      return handleOptions(origin);
     }
     const { action, payload } = await req.json();
 
@@ -29,7 +23,7 @@ serve(async (req: Request) => {
           .order('created_at', { ascending: false })
           .limit(limit);
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'getActiveMatches': {
@@ -40,7 +34,7 @@ serve(async (req: Request) => {
           .is('team2_score', null)
           .order('created_at', { ascending: false });
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'createMatch': {
@@ -59,7 +53,7 @@ serve(async (req: Request) => {
         ];
         const { error: playersError } = await supabase.from('match_players').insert(matchPlayers);
         if (playersError) throw playersError;
-        return json({ ok: true, id: match.id }, { status: 201 });
+        return json({ ok: true, id: match.id }, origin, { status: 201 });
       }
 
       case 'updateMatchResult': {
@@ -69,7 +63,7 @@ serve(async (req: Request) => {
           .update({ team1_score: team1Score, team2_score: team2Score, status: 'completed' })
           .eq('id', matchId);
         if (error) throw error;
-        return json({ ok: true });
+        return json({ ok: true }, origin);
       }
 
       case 'getMatchById': {
@@ -80,7 +74,7 @@ serve(async (req: Request) => {
           .eq('id', matchId)
           .single();
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'getPlayerMatchHistory': {
@@ -93,15 +87,15 @@ serve(async (req: Request) => {
           .order('created_at', { ascending: false });
         if (error) throw error;
         const filtered = (data || []).filter((m: any) => m.match_players.some((mp: any) => mp.player_id === playerId));
-        return json({ data: filtered });
+        return json({ data: filtered }, origin);
       }
 
       default:
-        return json({ error: 'Unknown action' }, { status: 400 });
+        return json({ error: 'Unknown action' }, origin, { status: 400 });
     }
   } catch (e) {
     console.error('matches function error', e);
-    return json({ error: String(e) }, { status: 500 });
+    return json({ error: String(e) }, origin, { status: 500 });
   }
 });
 

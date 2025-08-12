@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createHash } from "https://deno.land/std@0.177.0/hash/mod.ts";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -21,7 +21,7 @@ function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function generateToken(userId: string): string {
+async function generateToken(userId: string): Promise<string> {
   const header = { alg: 'HS256', typ: 'JWT' };
   const payload = { 
     sub: userId, 
@@ -32,24 +32,29 @@ function generateToken(userId: string): string {
   const encodedHeader = btoa(JSON.stringify(header));
   const encodedPayload = btoa(JSON.stringify(payload));
   
-  const signature = createHash('sha256')
-    .update(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`)
-    .toString('hex');
+  // Use Web Crypto API for SHA-256
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
-function verifyToken(token: string): string | null {
+async function verifyToken(token: string): Promise<string | null> {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     
     const [encodedHeader, encodedPayload, signature] = parts;
     
-    // Verify signature
-    const expectedSignature = createHash('sha256')
-      .update(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`)
-      .toString('hex');
+    // Verify signature using Web Crypto API
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     
     if (signature !== expectedSignature) return null;
     
@@ -149,7 +154,7 @@ serve(async (req: Request) => {
         if (userError) throw userError;
 
         // Generate JWT token
-        const token = generateToken(user.id);
+        const token = await generateToken(user.id);
 
         // Delete used code
         await supabase
@@ -170,7 +175,7 @@ serve(async (req: Request) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const userId = verifyToken(token);
+        const userId = await verifyToken(token);
         
         if (!userId) {
           return json({ error: 'Invalid or expired token' }, { status: 401 });

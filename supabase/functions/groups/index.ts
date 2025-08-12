@@ -1,17 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { getSupabaseClient } from "../_shared/supabaseClient.ts";
+import { handleOptions, json } from "../_shared/cors.ts";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-function json(data: any, init?: ResponseInit) {
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-}
+const supabase = getSupabaseClient();
 
 function verifyToken(req: Request): string | null {
   const authHeader = req.headers.get('Authorization');
@@ -26,14 +18,16 @@ function verifyToken(req: Request): string | null {
 }
 
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 200 });
+  const origin = req.headers.get("origin");
+  
+  if (req.method === "OPTIONS") {
+    return handleOptions(origin);
   }
 
   try {
     const userId = verifyToken(req);
     if (!userId) {
-      return json({ error: 'Unauthorized' }, { status: 401 });
+      return json({ error: 'Unauthorized' }, origin, { status: 401 });
     }
 
     const { action, payload } = await req.json();
@@ -47,7 +41,7 @@ serve(async (req: Request) => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return json({ data: groups || [] });
+        return json({ data: groups || [] }, origin);
       }
 
       case 'createGroup': {
@@ -64,7 +58,7 @@ serve(async (req: Request) => {
           .single();
 
         if (error) throw error;
-        return json({ data: group });
+        return json({ data: group }, origin);
       }
 
       case 'updateGroup': {
@@ -79,7 +73,7 @@ serve(async (req: Request) => {
           .single();
 
         if (error) throw error;
-        return json({ data: group });
+        return json({ data: group }, origin);
       }
 
       case 'deleteGroup': {
@@ -92,14 +86,14 @@ serve(async (req: Request) => {
           .eq('user_id', userId); // Ensure user owns the group
 
         if (error) throw error;
-        return json({ success: true });
+        return json({ success: true }, origin);
       }
 
       default:
-        return json({ error: 'Unknown action' }, { status: 400 });
+        return json({ error: 'Unknown action' }, origin, { status: 400 });
     }
   } catch (error) {
     console.error('Groups function error:', error);
-    return json({ error: 'Internal server error' }, { status: 500 });
+    return json({ error: 'Internal server error' }, origin, { status: 500 });
   }
 });

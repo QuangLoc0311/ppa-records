@@ -1,22 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { getSupabaseClient } from "../_shared/supabaseClient.ts";
+import { handleOptions, json } from "../_shared/cors.ts";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-function json(data: any, init?: ResponseInit) {
-  return new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    ...init,
-  });
-}
+const supabase = getSupabaseClient();
 
 serve(async (req: Request) => {
   try {
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*' } });
+    const origin = req.headers.get("origin");
+    
+    if (req.method === "OPTIONS") {
+      return handleOptions(origin);
     }
     const { action, payload } = await req.json();
 
@@ -27,7 +21,7 @@ serve(async (req: Request) => {
           .select('*')
           .order('created_at', { ascending: false });
         if (error) throw error;
-        return json({ data });
+        return json({ data }, origin);
       }
 
       case 'getSessionById': {
@@ -44,7 +38,7 @@ serve(async (req: Request) => {
           .eq('session_id', sessionId)
           .order('match_number', { ascending: true });
         if (matchesError) throw matchesError;
-        return json({ session, matches });
+        return json({ session, matches }, origin);
       }
 
       case 'createSession': {
@@ -69,7 +63,7 @@ serve(async (req: Request) => {
         }
         const { error: mpError } = await supabase.from('match_players').insert(matchPlayerInserts);
         if (mpError) throw mpError;
-        return json({ data: session }, { status: 201 });
+        return json({ data: session }, origin, { status: 201 });
       }
 
       case 'updateSessionStatus': {
@@ -79,22 +73,22 @@ serve(async (req: Request) => {
           .update({ status, updated_at: new Date().toISOString() })
           .eq('id', sessionId);
         if (error) throw error;
-        return json({ ok: true });
+        return json({ ok: true }, origin);
       }
 
       case 'deleteSession': {
         const { sessionId } = payload as any;
         const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
         if (error) throw error;
-        return json({ ok: true });
+        return json({ ok: true }, origin);
       }
 
       default:
-        return json({ error: 'Unknown action' }, { status: 400 });
+        return json({ error: 'Unknown action' }, origin, { status: 400 });
     }
   } catch (e) {
     console.error('sessions function error', e);
-    return json({ error: String(e) }, { status: 500 });
+    return json({ error: String(e) }, origin, { status: 500 });
   }
 });
 

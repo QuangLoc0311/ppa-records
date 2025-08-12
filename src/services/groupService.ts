@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Group, CreateGroupData, UpdateGroupData, GroupWithPlayers } from '../types';
+import type { Group, CreateGroupData, UpdateGroupData } from '../types';
 
 export const groupService = {
   // Get all groups for current user

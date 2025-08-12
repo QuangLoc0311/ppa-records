@@ -4,6 +4,7 @@ export { sessionService } from './sessionService';
 export { storageService } from './storageService';
 export { authService } from './authService';
 export { groupService } from './groupService';
+export { scoreService } from './scoreService';
 
 // Export types from their correct locations
 export type { CreatePlayerData, UpdatePlayerData } from './playerService';
