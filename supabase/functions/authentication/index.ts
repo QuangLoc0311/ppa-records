@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { getSupabaseClient } from "../_shared/supabaseClient.ts";
 import { handleOptions, json } from "../_shared/cors.ts";
+import { sendEmail } from "./sendEmail.ts";
 
 const supabase = getSupabaseClient();
 
@@ -114,9 +115,17 @@ serve(async (req: Request) => {
 
         if (codeError) throw codeError;
 
-        // TODO: Send email with code (you'll need to implement this)
-        // For now, just log it
-        console.log(`Verification code for ${email}: ${code}`);
+        try {
+          await sendEmail(
+            email,
+            "Your Verification Code",
+            `<p>Your verification code is:</p>
+            <h2>${code}</h2>  
+            <p>This code will expire in 10 minutes.</p>`
+          );
+        } catch (error) {
+          console.error('Failed to send email:', error);
+        }
 
         return json({ success: true }, origin);
       }

@@ -4,7 +4,7 @@ export const allowedOrigins = [
 ];
 
 export function getCorsHeaders(origin: string | null) {
-  const isAllowedOrigin = origin ? allowedOrigins.includes(origin) : false;
+  const isAllowedOrigin = origin && allowedOrigins.some(o => o.startsWith(origin));
   return {
     "Access-Control-Allow-Origin": isAllowedOrigin ? origin! : allowedOrigins[0],
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",

@@ -5,7 +5,7 @@ export const authService = {
   // Request verification code
   async requestCode(email: string): Promise<{ success: boolean; message: string }> {
     try {
-      const res = await supabase.functions.invoke('auth', {
+      const res = await supabase.functions.invoke('authentication', {
         body: { action: 'requestCode', payload: { email } }
       });
       
@@ -27,7 +27,7 @@ export const authService = {
   // Verify code and get user
   async verifyCode(email: string, code: string): Promise<AuthResponse> {
     try {
-      const res = await supabase.functions.invoke('auth', {
+      const res = await supabase.functions.invoke('authentication', {
         body: { action: 'verifyCode', payload: { email, code } }
       });
       
@@ -52,7 +52,7 @@ export const authService = {
       const token = localStorage.getItem('auth_token');
       if (!token) return null;
 
-      const res = await supabase.functions.invoke('auth', {
+      const res = await supabase.functions.invoke('authentication', {
         body: { action: 'getCurrentUser' },
         headers: { Authorization: `Bearer ${token}` }
       });
