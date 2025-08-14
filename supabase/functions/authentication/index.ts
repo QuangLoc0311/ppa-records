@@ -1,8 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { getSupabaseClient } from "../_shared/supabaseClient.ts";
-import { handleOptions, json } from "../_shared/cors.ts";
-import { sendEmail } from "./sendEmail.ts";
+import { handleOptions, json, setSecureCookie, clearCookie } from "../_shared/cors.ts";
 
 const supabase = getSupabaseClient();
 
@@ -115,17 +114,19 @@ serve(async (req: Request) => {
 
         if (codeError) throw codeError;
 
-        try {
-          await sendEmail(
-            email,
-            "Your Verification Code",
-            `<p>Your verification code is:</p>
-            <h2>${code}</h2>  
-            <p>This code will expire in 10 minutes.</p>`
-          );
-        } catch (error) {
-          console.error('Failed to send email:', error);
-        }
+        // if (process.env.NODE_ENV === "production") {
+        //   try {
+        //     await sendEmail(
+        //       email,
+        //       "Your Verification Code",
+        //       `<p>Your verification code is:</p>
+        //       <h2>${code}</h2>  
+        //       <p>This code will expire in 10 minutes.</p>`
+        //     );
+        //   } catch (error) {
+        //     console.error('Failed to send email:', error);
+        //   }
+        // }
 
         return json({ success: true }, origin);
       }
@@ -164,19 +165,35 @@ serve(async (req: Request) => {
           .delete()
           .eq('id', verificationCode.id);
 
-        return json({
+        // Set secure HTTP-only cookies
+        const response = json({
           user,
           token
         }, origin);
+
+        // Add secure cookies to response headers
+        response.headers.set('Set-Cookie', setSecureCookie('auth_token', token));
+        response.headers.set('Set-Cookie', setSecureCookie('user', JSON.stringify(user)));
+
+        return response;
       }
 
       case 'getCurrentUser': {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          return json({ error: 'Missing authorization header' }, origin, { status: 401 });
+        // Try to get token from cookie first, then from Authorization header
+        let token = req.headers.get('Cookie')?.match(/auth_token=([^;]+)/)?.[1];
+        
+        if (!token) {
+          const authHeader = req.headers.get('Authorization');
+          if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return json({ error: 'Missing authorization' }, origin, { status: 401 });
+          }
+          token = authHeader.split(' ')[1];
+        }
+        
+        if (!token) {
+          return json({ error: 'Missing authorization' }, origin, { status: 401 });
         }
 
-        const token = authHeader.split(' ')[1];
         const userId = await verifyToken(token);
         
         if (!userId) {
@@ -193,6 +210,16 @@ serve(async (req: Request) => {
         if (userError) throw userError;
 
         return json({ user }, origin);
+      }
+
+      case 'logout': {
+        const response = json({ success: true }, origin);
+        
+        // Clear cookies by setting them to expire in the past
+        response.headers.set('Set-Cookie', clearCookie('auth_token'));
+        response.headers.set('Set-Cookie', clearCookie('user'));
+        
+        return response;
       }
 
       default:

@@ -20,7 +20,7 @@ function verifyToken(req: Request): string | null {
 serve(async (req: Request) => {
   const origin = req.headers.get("origin");
   
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return handleOptions(origin);
   }
 

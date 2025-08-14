@@ -7,4 +7,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey) 
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // We're handling auth manually with cookies
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'ppa-records-web'
+    }
+  }
+}) 
